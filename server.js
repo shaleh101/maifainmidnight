@@ -20,20 +20,20 @@ const ROLES = {
     CITIZEN: { key: 'CITIZEN', name: 'مواطن', icon: '👤', colorClass: '', desc: 'أنت مواطن شريف. راقب تصرفات الجميع وشارك في التصويت نهاراً لطرد المافيا.' }
 };
 
-// القدرات الخاصة
+// القدرات الخاصة (المتوازنة والجديدة)
 const ABILITIES = {
     MAFIA: [
         { id: 'disguise', name: 'التمويه', icon: '🎭', desc: 'تظهر كمواطن بريء إذا حقق معك المحقق هذه الليلة' },
         { id: 'blackmail', name: 'الابتزاز', icon: '🤫', desc: 'تمنع لاعب من التصويت والكلام في النهار التالي' },
-        { id: 'frame', name: 'التحويل', icon: '🔄', desc: 'تنقل الشبهة إلى لاعب آخر — يُعلن أن شخصاً مشبوهاً رُصد بالقرب من الجريمة' }
+        { id: 'frame', name: 'التحويل', icon: '🔄', desc: 'تلفيق التهمة: إذا حقق المحقق مع هذا اللاعب الليلة، سيظهر له بأنه "مذنب"' }
     ],
     DOCTOR: [
         { id: 'self_heal', name: 'إنقاذ الذات', icon: '💊', desc: 'تحمي نفسك من القتل هذه الليلة' },
-        { id: 'autopsy', name: 'التشريح', icon: '🔬', desc: 'تعرف دور آخر لاعب مات (مافيا أم لا)' },
-        { id: 'sixth_sense', name: 'الحاسة السادسة', icon: '✨', desc: 'تعرف إذا كان اللاعب الذي أنقذته كان مستهدفاً فعلاً' }
+        { id: 'autopsy', name: 'التشريح', icon: '🔬', desc: 'تكشف الوظيفة الأساسية (مافيا/طبيب/محقق/مواطن) لآخر لاعب مات' },
+        { id: 'intensive_care', name: 'العناية الفائقة', icon: '💉', desc: 'تحمي اللاعب، وتبطل أي محاولة لابتزازه أو تلفيق التهمة له' }
     ],
     DETECTIVE: [
-        { id: 'wiretap', name: 'التنصت', icon: '📡', desc: 'تعرف من استهدفته المافيا هذه الليلة' },
+        { id: 'tracker', name: 'اقتفاء الأثر', icon: '👣', desc: 'تختار لاعباً وتعرف من هو الشخص الذي قام بزيارته (استهدافه) هذه الليلة' },
         { id: 'surveillance', name: 'المراقبة', icon: '👁️', desc: 'تراقب لاعباً وتعرف هل استخدم قدرة هذه الليلة' },
         { id: 'deep_investigate', name: 'التحقيق العميق', icon: '🔍', desc: 'تعرف الدور الكامل للاعب بدلاً من بريء/مذنب فقط' }
     ]
@@ -71,7 +71,9 @@ io.on('connection', (socket) => {
             settings: {
                 mafiaCount: settings.mafiaCount || 1,
                 doctorCount: settings.doctorCount || 1,
-                detectiveCount: settings.detectiveCount || 1
+                detectiveCount: settings.detectiveCount || 1,
+                abilitiesEnabled: settings.abilitiesEnabled !== false,
+                roleAbilities: settings.roleAbilities || { mafia: true, doctor: true, detective: true }
             },
             players: [{
                 id: socket.id,
@@ -82,7 +84,7 @@ io.on('connection', (socket) => {
                 usedAbilities: {},
                 isHost: settings.hasHost
             }],
-            state: 'lobby', // lobby, night, day, gameOver
+            state: 'lobby',
             round: 0,
             nightActions: {},
             votes: {},
@@ -92,7 +94,7 @@ io.on('connection', (socket) => {
             mafiaTarget: null,
             doctorTarget: null,
             detectiveTarget: null,
-            nightPhase: null, // 'mafia', 'doctor', 'detective'
+            nightPhase: null,
             nightResults: [],
             disguiseActive: false
         };
@@ -176,7 +178,7 @@ io.on('connection', (socket) => {
         while (roleDeck.length < playerCount) roleDeck.push(ROLES.CITIZEN);
         shuffle(roleDeck);
 
-        // توزيع الأدوار
+        // توزيع الأدوار مع تطبيق إعدادات القدرات
         let roleIdx = 0;
         room.players.forEach(p => {
             if (room.hasHost && p.isHost) {
@@ -184,8 +186,14 @@ io.on('connection', (socket) => {
                 return;
             }
             p.role = roleDeck[roleIdx++];
-            // تعيين القدرات المتاحة
-            if (ABILITIES[p.role.key]) {
+            p.abilities = {};
+
+            const roleKeyLow = p.role.key.toLowerCase();
+            const settings = room.settings;
+            const abilitiesEnabled = settings.abilitiesEnabled !== false;
+            const roleAbEnabled = settings.roleAbilities ? settings.roleAbilities[roleKeyLow] !== false : true;
+
+            if (abilitiesEnabled && roleAbEnabled && ABILITIES[p.role.key]) {
                 ABILITIES[p.role.key].forEach(ab => {
                     p.abilities[ab.id] = { ...ab, available: true };
                 });
@@ -197,9 +205,7 @@ io.on('connection', (socket) => {
 
         // إرسال الدور لكل لاعب
         room.players.forEach(p => {
-            const abilities = p.role && ABILITIES[p.role.key]
-                ? ABILITIES[p.role.key].map(ab => ({ ...ab, available: true }))
-                : [];
+            const abilities = Object.values(p.abilities);
             io.to(p.id).emit('gameStarted', {
                 role: p.role,
                 abilities,
@@ -212,7 +218,7 @@ io.on('connection', (socket) => {
         console.log(`🎮 اللعبة بدأت في الغرفة ${room.code}`);
     });
 
-    // --------- اللاعب جاهز (بعد كشف الدور) ---------
+    // --------- اللاعب جاهز ---------
     socket.on('playerReady', () => {
         const room = rooms[socket.roomCode];
         if (!room) return;
@@ -279,7 +285,6 @@ io.on('connection', (socket) => {
             }
         }
 
-        // التحقق من اكتمال إجراءات الليل
         checkNightComplete(room);
     });
 
@@ -291,7 +296,6 @@ io.on('connection', (socket) => {
         if (room.state === 'night') {
             resolveNight(room);
         } else if (room.state === 'day') {
-            // الهوست ينتقل للتصويت
             room.state = 'voting';
             io.to(room.code).emit('votingStarted', {
                 players: getAlivePlayers(room),
@@ -310,13 +314,12 @@ io.on('connection', (socket) => {
 
         room.votes[socket.id] = targetId;
 
+        const eligibleVoters = getAlivePlayers(room).filter(p => p.id !== room.blackmailedPlayer && !p.isHost);
         io.to(room.code).emit('voteUpdate', {
             votedCount: Object.keys(room.votes).length,
-            totalVoters: getAlivePlayers(room).filter(p => p.id !== room.blackmailedPlayer).length
+            totalVoters: eligibleVoters.length
         });
 
-        // Check if all alive (non-blackmailed) players have voted
-        const eligibleVoters = getAlivePlayers(room).filter(p => p.id !== room.blackmailedPlayer && !p.isHost);
         if (Object.keys(room.votes).length >= eligibleVoters.length) {
             resolveVotes(room);
         }
@@ -328,6 +331,12 @@ io.on('connection', (socket) => {
         if (!room) return;
         room.votes[socket.id] = 'skip';
         const eligibleVoters = getAlivePlayers(room).filter(p => p.id !== room.blackmailedPlayer && !p.isHost);
+        
+        io.to(room.code).emit('voteUpdate', {
+            votedCount: Object.keys(room.votes).length,
+            totalVoters: eligibleVoters.length
+        });
+
         if (Object.keys(room.votes).length >= eligibleVoters.length) {
             resolveVotes(room);
         }
@@ -347,7 +356,6 @@ io.on('connection', (socket) => {
             room.players.splice(playerIdx, 1);
             if (room.players.length === 0) {
                 delete rooms[code];
-                console.log(`🗑️ غرفة ${code} حُذفت (فارغة)`);
             } else {
                 if (socket.id === room.host && room.players.length > 0) {
                     room.host = room.players[0].id;
@@ -361,7 +369,6 @@ io.on('connection', (socket) => {
             io.to(code).emit('playerDisconnected', { name: playerName });
             checkWinCondition(room);
         }
-        console.log(`❌ ${playerName} غادر الغرفة ${code}`);
     });
 });
 
@@ -388,13 +395,12 @@ function startNight(room) {
     room.doctorTarget = null;
     room.detectiveTarget = null;
     room.disguiseActive = false;
-    // لا نمسح blackmail/frame هنا — يُمسح بعد الاستخدام
 
     const alivePlayers = getAlivePlayers(room);
 
     room.players.forEach(p => {
         if (!p.isAlive && !p.isHost) return;
-        const abilities = p.role && ABILITIES[p.role.key]
+        const abilities = p.role && Object.keys(p.abilities).length > 0
             ? Object.values(p.abilities).filter(a => a.available)
             : [];
 
@@ -420,10 +426,8 @@ function checkNightComplete(room) {
 
     if (mafiaActed && doctorActed && detectiveActed) {
         if (!room.hasHost) {
-            // بدون هوست — التقدم تلقائي
             setTimeout(() => resolveNight(room), 1500);
         } else {
-            // مع هوست — إبلاغه بأن الجميع انتهى
             const hostPlayer = room.players.find(p => p.isHost);
             if (hostPlayer) {
                 io.to(hostPlayer.id).emit('allNightActionsComplete');
@@ -442,11 +446,6 @@ function resolveNight(room) {
         if (target) {
             if (room.doctorTarget === room.mafiaTarget) {
                 results.push({ type: 'saved', name: target.name });
-                // الحاسة السادسة — الطبيب يعرف أنه أنقذ فعلاً
-                const doctors = room.players.filter(p => p.isAlive && p.role.key === 'DOCTOR');
-                doctors.forEach(doc => {
-                    io.to(doc.id).emit('sixthSenseResult', { wasThreatened: true, targetName: target.name });
-                });
             } else {
                 target.isAlive = false;
                 killed = target;
@@ -458,13 +457,16 @@ function resolveNight(room) {
         results.push({ type: 'noKill', message: 'الليلة مرت بسلام' });
     }
 
-    // 2. الحاسة السادسة — لم يكن مستهدفاً
-    if (room.doctorTarget && room.doctorTarget !== room.mafiaTarget) {
-        const doctors = room.players.filter(p => p.isAlive && p.role.key === 'DOCTOR');
-        doctors.forEach(doc => {
-            io.to(doc.id).emit('sixthSenseResult', { wasThreatened: false, targetName: room.players.find(p => p.id === room.doctorTarget)?.name });
-        });
-    }
+    // 2. العناية الفائقة (تنظيف الهدف من التحويل والابتزاز)
+    const doctors = room.players.filter(p => p.isAlive && p.role.key === 'DOCTOR');
+    doctors.forEach(doc => {
+        if (doc.usedAbilities['intensive_care']) {
+            const docTargetId = doc.usedAbilities['intensive_care'];
+            if (room.blackmailedPlayer === docTargetId) room.blackmailedPlayer = null;
+            if (room.framedPlayer === docTargetId) room.framedPlayer = null;
+            io.to(doc.id).emit('intensiveCareResult', { targetName: room.players.find(p => p.id === docTargetId)?.name });
+        }
+    });
 
     // 3. نتيجة التحقيق
     if (room.detectiveTarget) {
@@ -474,9 +476,13 @@ function resolveNight(room) {
         detectives.forEach(det => {
             let investigationResult;
             const usedDeep = det.usedAbilities['deep_investigate'];
+            const isFramed = (room.framedPlayer === target.id);
 
+            // منطق التحويل والتمويه
             if (target.role.key === 'MAFIA' && room.disguiseActive) {
                 investigationResult = { targetName: target.name, result: 'بريء', detail: 'مواطن', disguised: true };
+            } else if (isFramed) {
+                investigationResult = { targetName: target.name, result: 'مذنب', detail: 'مافيا', framed: true };
             } else if (usedDeep) {
                 investigationResult = { targetName: target.name, result: target.role.key === 'MAFIA' ? 'مذنب' : 'بريء', detail: target.role.name };
             } else {
@@ -484,12 +490,14 @@ function resolveNight(room) {
             }
             io.to(det.id).emit('investigationResult', investigationResult);
 
-            // التنصت
-            if (det.usedAbilities['wiretap']) {
-                const mafiaTargetName = room.mafiaTarget
-                    ? room.players.find(p => p.id === room.mafiaTarget)?.name
-                    : 'لم يستهدفوا أحداً';
-                io.to(det.id).emit('wiretapResult', { targetName: mafiaTargetName });
+            // اقتفاء الأثر
+            if (det.usedAbilities['tracker']) {
+                const trackedAction = room.nightActions[target.id];
+                let visitedName = 'لم يقم بزيارة أحد';
+                if (trackedAction && trackedAction.targetId) {
+                    visitedName = room.players.find(p => p.id === trackedAction.targetId)?.name || visitedName;
+                }
+                io.to(det.id).emit('trackerResult', { targetName: target.name, visitedName });
             }
 
             // المراقبة
@@ -505,43 +513,37 @@ function resolveNight(room) {
         });
     }
 
-    // 4. التشريح — الطبيب يعرف دور الميت
+    // 4. التشريح — يظهر الوظيفة الأساسية
     if (killed) {
-        const doctors = room.players.filter(p => p.isAlive && p.role.key === 'DOCTOR');
         doctors.forEach(doc => {
             if (doc.usedAbilities['autopsy']) {
                 io.to(doc.id).emit('autopsyResult', {
                     name: killed.name,
-                    role: killed.role.name,
-                    isMafia: killed.role.key === 'MAFIA'
+                    role: killed.role.name
                 });
             }
         });
     }
 
-    // 5. التحويل (الإطار)
-    let frameAnnouncement = null;
-    if (room.framedPlayer) {
-        const framed = room.players.find(p => p.id === room.framedPlayer);
-        if (framed && framed.isAlive) {
-            frameAnnouncement = `⚠️ مصادر سرية تفيد بأن ${framed.name} شوهد بالقرب من مكان الجريمة...`;
-        }
-        room.framedPlayer = null;
-    }
+    // مسح إعلان التحويل السري
+    room.framedPlayer = null;
 
     // التحول للنهار
     room.state = 'day';
     room.votes = {};
     room.round++;
 
-    // Reset per-round ability tracking
+    // مسح القدرات المستخدمة لهذه الجولة
     room.players.forEach(p => {
-        delete p.usedAbilities['wiretap'];
+        delete p.usedAbilities['tracker'];
         delete p.usedAbilities['surveillance'];
         delete p.usedAbilities['deep_investigate'];
         delete p.usedAbilities['disguise'];
         delete p.usedAbilities['frame'];
         delete p.usedAbilities['blackmail'];
+        delete p.usedAbilities['intensive_care'];
+        delete p.usedAbilities['autopsy'];
+        delete p.usedAbilities['self_heal'];
     });
 
     const winResult = getWinCondition(room);
@@ -549,7 +551,7 @@ function resolveNight(room) {
     io.to(room.code).emit('dayStarted', {
         round: room.round,
         results,
-        frameAnnouncement,
+        frameAnnouncement: null,
         blackmailedPlayer: room.blackmailedPlayer,
         blackmailedName: room.blackmailedPlayer ? room.players.find(p => p.id === room.blackmailedPlayer)?.name : null,
         players: room.players.map(p => ({
@@ -671,7 +673,6 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🎮 سيرفر المافيا يعمل على:`);
     console.log(`   محلي: http://localhost:${PORT}`);
-    // عرض عنوان الشبكة
     const nets = require('os').networkInterfaces();
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {

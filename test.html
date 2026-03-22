@@ -9,7 +9,6 @@
 </head>
 <body>
 
-    <!-- ===== شاشة الدخول ===== -->
     <div id="screen-home" class="screen active">
         <div class="home-container">
             <div class="home-logo">
@@ -32,7 +31,6 @@
         </div>
     </div>
 
-    <!-- ===== نافذة إنشاء غرفة ===== -->
     <div id="screen-create" class="screen">
         <div class="panel">
             <button class="back-btn" onclick="goHome()">→ رجوع</button>
@@ -84,13 +82,37 @@
                 </div>
             </div>
 
+            <div class="setting-card">
+                <h3>القدرات الخاصة</h3>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" id="toggle-abilities-main" onclick="toggleMainAbilities()">
+                        <span class="toggle-icon">⚡</span>
+                        <span class="toggle-label">تفعيل القدرات الخاصة</span>
+                        <span class="toggle-desc">التمويه، التشريح، المراقبة... إلخ</span>
+                    </button>
+                </div>
+                
+                <div id="abilities-sub-list" class="role-settings" style="margin-top: 15px;">
+                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('mafia')" id="toggle-ab-mafia">
+                        <span class="role-label role-mafia-text">🩸 قدرات المافيا</span>
+                        <span class="ab-status">✅</span>
+                    </div>
+                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('doctor')" id="toggle-ab-doctor">
+                        <span class="role-label role-doctor-text">👨‍⚕️ قدرات الطبيب</span>
+                        <span class="ab-status">✅</span>
+                    </div>
+                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('detective')" id="toggle-ab-detective">
+                        <span class="role-label role-detective-text">🕵️‍♂️ قدرات المحقق</span>
+                        <span class="ab-status">✅</span>
+                    </div>
+                </div>
+            </div>
             <button class="btn btn-primary" onclick="createRoom()">
                 <span class="btn-icon">🎮</span> إنشاء الغرفة
             </button>
         </div>
     </div>
 
-    <!-- ===== نافذة الانضمام ===== -->
     <div id="screen-join" class="screen">
         <div class="panel">
             <button class="back-btn" onclick="goHome()">→ رجوع</button>
@@ -110,7 +132,6 @@
         </div>
     </div>
 
-    <!-- ===== اللوبي ===== -->
     <div id="screen-lobby" class="screen">
         <div class="panel">
             <div class="lobby-header">
@@ -133,7 +154,6 @@
         </div>
     </div>
 
-    <!-- ===== كشف الدور ===== -->
     <div id="screen-role" class="screen">
         <div class="role-reveal-container">
             <div class="role-card" id="role-card">
@@ -150,7 +170,6 @@
         </div>
     </div>
 
-    <!-- ===== شاشة الليل ===== -->
     <div id="screen-night" class="screen">
         <div class="panel night-panel">
             <div class="night-header">
@@ -159,7 +178,6 @@
                 <p class="night-subtitle">المدينة نامت...</p>
             </div>
 
-            <!-- واجهة المافيا -->
             <div id="night-mafia" class="night-action-section hidden">
                 <h3 class="role-mafia-text">🩸 اختر ضحيتك</h3>
                 <div id="mafia-targets" class="target-grid"></div>
@@ -167,7 +185,6 @@
                 <button class="btn btn-danger" id="btn-mafia-confirm" onclick="confirmNightAction()">تأكيد الاختيار</button>
             </div>
 
-            <!-- واجهة الطبيب -->
             <div id="night-doctor" class="night-action-section hidden">
                 <h3 class="role-doctor-text">👨‍⚕️ اختر من تحميه</h3>
                 <div id="doctor-targets" class="target-grid"></div>
@@ -175,7 +192,6 @@
                 <button class="btn btn-success" id="btn-doctor-confirm" onclick="confirmNightAction()">تأكيد الحماية</button>
             </div>
 
-            <!-- واجهة المحقق -->
             <div id="night-detective" class="night-action-section hidden">
                 <h3 class="role-detective-text">🕵️ اختر من تحقق معه</h3>
                 <div id="detective-targets" class="target-grid"></div>
@@ -183,7 +199,6 @@
                 <button class="btn btn-info" id="btn-detective-confirm" onclick="confirmNightAction()">تأكيد التحقيق</button>
             </div>
 
-            <!-- واجهة المواطن -->
             <div id="night-citizen" class="night-action-section hidden">
                 <div class="sleeping-container">
                     <div class="zzz">💤</div>
@@ -191,7 +206,6 @@
                 </div>
             </div>
 
-            <!-- واجهة الهوست -->
             <div id="night-host" class="night-action-section hidden">
                 <h3>📖 لوحة الراوي</h3>
                 <div id="host-night-log" class="host-log"></div>
@@ -209,7 +223,6 @@
         </div>
     </div>
 
-    <!-- ===== شاشة النهار ===== -->
     <div id="screen-day" class="screen">
         <div class="panel day-panel">
             <div class="day-header">
@@ -227,7 +240,6 @@
         </div>
     </div>
 
-    <!-- ===== شاشة التصويت ===== -->
     <div id="screen-voting" class="screen">
         <div class="panel">
             <h2>🗳️ التصويت</h2>
@@ -241,14 +253,12 @@
         </div>
     </div>
 
-    <!-- ===== نتيجة التصويت ===== -->
     <div id="screen-vote-result" class="screen">
         <div class="panel">
             <div id="vote-result-content"></div>
         </div>
     </div>
 
-    <!-- ===== شاشة النهاية ===== -->
     <div id="screen-gameover" class="screen">
         <div class="gameover-container">
             <div id="gameover-content"></div>
@@ -258,7 +268,6 @@
         </div>
     </div>
 
-    <!-- ===== إشعار الخطأ ===== -->
     <div class="toast-container" id="toast-container"></div>
 
     <script src="/socket.io/socket.io.js"></script>

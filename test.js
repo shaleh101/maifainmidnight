@@ -12,7 +12,11 @@ let state = {
     abilities: [],
     selectedTarget: null,
     selectedAbility: null,
-    settings: { mafiaCount: 1, doctorCount: 1, detectiveCount: 1 }
+    settings: { 
+        mafiaCount: 1, doctorCount: 1, detectiveCount: 1,
+        abilitiesEnabled: true,
+        roleAbilities: { mafia: true, doctor: true, detective: true }
+    }
 };
 
 // ========== التنقل بين الشاشات ==========
@@ -60,6 +64,35 @@ function adjustCount(role, delta) {
     state.settings[`${role}Count`] = val;
 }
 
+// ========== إعدادات القدرات الخاصة ==========
+function toggleMainAbilities() {
+    state.settings.abilitiesEnabled = !state.settings.abilitiesEnabled;
+    const btn = document.getElementById('toggle-abilities-main');
+    const subList = document.getElementById('abilities-sub-list');
+    
+    if (state.settings.abilitiesEnabled) {
+        btn.classList.add('active');
+        subList.classList.remove('hidden');
+    } else {
+        btn.classList.remove('active');
+        subList.classList.add('hidden');
+    }
+}
+
+function toggleRoleAbility(role) {
+    state.settings.roleAbilities[role] = !state.settings.roleAbilities[role];
+    const el = document.getElementById(`toggle-ab-${role}`);
+    const status = el.querySelector('.ab-status');
+    
+    if (state.settings.roleAbilities[role]) {
+        el.style.opacity = '1';
+        status.textContent = '✅';
+    } else {
+        el.style.opacity = '0.5';
+        status.textContent = '❌';
+    }
+}
+
 // ========== إدخال كود الغرفة ==========
 function onCodeInput(el) {
     const val = el.value.replace(/[^0-9]/g, '');
@@ -92,7 +125,9 @@ function createRoom() {
             hasHost: state.hasHost,
             mafiaCount: state.settings.mafiaCount,
             doctorCount: state.settings.doctorCount,
-            detectiveCount: state.settings.detectiveCount
+            detectiveCount: state.settings.detectiveCount,
+            abilitiesEnabled: state.settings.abilitiesEnabled,
+            roleAbilities: state.settings.roleAbilities
         }
     });
 }
@@ -435,10 +470,35 @@ socket.on('dayStarted', ({ round, results, frameAnnouncement, blackmailedPlayer,
     if (state.isHost) {
         voteBtn.style.display = 'flex';
         voteBtn.innerHTML = '<span class="btn-icon">🗳️</span> بدء التصويت';
+        voteBtn.onclick = goToVoting;
     } else if (!state.hasHost) {
         voteBtn.style.display = 'flex';
         voteBtn.innerHTML = '<span class="btn-icon">🗳️</span> الانتقال للتصويت';
-        voteBtn.onclick = () => showScreen('screen-voting');
+        voteBtn.onclick = () => {
+            const container = document.getElementById('vote-targets');
+            container.innerHTML = '';
+            state.selectedTarget = null;
+
+            if (blackmailedPlayer === state.playerId) {
+                container.innerHTML = '<div class="sleeping-container"><p>🤫 أنت مُبتز — لا يمكنك التصويت</p></div>';
+                document.getElementById('btn-confirm-vote').style.display = 'none';
+            } else {
+                document.getElementById('btn-confirm-vote').style.display = 'inline-block';
+                document.getElementById('btn-confirm-vote').disabled = false;
+                document.getElementById('btn-confirm-vote').textContent = 'تأكيد التصويت';
+
+                players.forEach(p => {
+                    if (p.id === state.playerId || !p.isAlive) return;
+                    container.innerHTML += `
+                        <div class="target-item" data-id="${p.id}" onclick="selectVoteTarget('${p.id}')">
+                            <span>👤</span>
+                            <span>${p.name}</span>
+                        </div>
+                    `;
+                });
+            }
+            showScreen('screen-voting');
+        };
     } else {
         voteBtn.style.display = 'none';
     }
@@ -553,18 +613,19 @@ socket.on('gameOver', ({ winner, message, players }) => {
 });
 
 // ========== نتائج القدرات الخاصة ==========
-socket.on('investigationResult', ({ targetName, result, detail, disguised }) => {
+socket.on('investigationResult', ({ targetName, result, detail, disguised, framed }) => {
     const infoEl = document.getElementById('day-special-info');
     let html = `<div class="special-info-card">🕵️ نتيجة التحقيق: ${targetName} — <strong>${result}</strong>`;
     if (detail) html += ` (${detail})`;
     if (disguised) html += ' <span style="color:var(--warning-color);">[ربما تمويه!]</span>';
+    if (framed) html += ' <span style="color:var(--mafia-color);">[مشبوه بشدة!]</span>';
     html += '</div>';
     infoEl.innerHTML += html;
 });
 
-socket.on('wiretapResult', ({ targetName }) => {
+socket.on('trackerResult', ({ targetName, visitedName }) => {
     const infoEl = document.getElementById('day-special-info');
-    infoEl.innerHTML += `<div class="special-info-card">📡 التنصت: المافيا استهدفت <strong>${targetName}</strong></div>`;
+    infoEl.innerHTML += `<div class="special-info-card">👣 اقتفاء الأثر: اللاعب <strong>${targetName}</strong> قام بزيارة <strong>${visitedName}</strong> هذه الليلة.</div>`;
 });
 
 socket.on('surveillanceResult', ({ targetName, usedAbility }) => {
@@ -572,18 +633,14 @@ socket.on('surveillanceResult', ({ targetName, usedAbility }) => {
     infoEl.innerHTML += `<div class="special-info-card">👁️ المراقبة: ${targetName} ${usedAbility ? '<strong>استخدم قدرة</strong> هذه الليلة' : 'لم يستخدم أي قدرة'}</div>`;
 });
 
-socket.on('sixthSenseResult', ({ wasThreatened, targetName }) => {
+socket.on('intensiveCareResult', ({ targetName }) => {
     const infoEl = document.getElementById('day-special-info');
-    if (wasThreatened) {
-        infoEl.innerHTML += `<div class="special-info-card">✨ الحاسة السادسة: ${targetName} كان <strong>مستهدفاً فعلاً</strong> — أنقذته!</div>`;
-    } else {
-        infoEl.innerHTML += `<div class="special-info-card">✨ الحاسة السادسة: ${targetName} <strong>لم يكن مستهدفاً</strong> هذه الليلة</div>`;
-    }
+    infoEl.innerHTML += `<div class="special-info-card">💉 العناية الفائقة: تم حماية وتطهير <strong>${targetName}</strong> من أي محاولة لتلفيق التهمة أو الابتزاز!</div>`;
 });
 
-socket.on('autopsyResult', ({ name, role, isMafia }) => {
+socket.on('autopsyResult', ({ name, role }) => {
     const infoEl = document.getElementById('day-special-info');
-    infoEl.innerHTML += `<div class="special-info-card">🔬 التشريح: ${name} كان <strong>${role}</strong> ${isMafia ? '(مافيا!)' : '(بريء)'}</div>`;
+    infoEl.innerHTML += `<div class="special-info-card">🔬 التشريح: الوظيفة الأساسية للاعب ${name} كانت <strong>${role}</strong></div>`;
 });
 
 socket.on('playerDisconnected', ({ name }) => {
