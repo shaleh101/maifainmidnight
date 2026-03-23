@@ -1061,3 +1061,8 @@ input::placeholder { color: var(--text-muted); }
     .lobby-header { flex-direction: column; }
     .room-code-display { width: 100%; justify-content: center; }
 }
+.target-item.selected-ability {
+    border-color: var(--warning-color);
+    background: rgba(245, 158, 11, 0.12);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مافيا 🔍 — لعبة التحقيق</title>
-    <meta name="description" content="لعبة المافيا التفاعلية — غرف خاصة متعددة اللاعبين مع قدرات خاصة">
     <link rel="stylesheet" href="test.css">
 </head>
 <body>
@@ -40,14 +39,10 @@
                 <h3>وضع اللعب</h3>
                 <div class="toggle-group">
                     <button class="toggle-btn active" id="toggle-host" onclick="setHostMode(true)">
-                        <span class="toggle-icon">📖</span>
-                        <span class="toggle-label">مع راوي (هوست)</span>
-                        <span class="toggle-desc">شخص يدير الجلسة ويروي الأحداث</span>
+                        <span class="toggle-icon">📖</span> <span class="toggle-label">مع راوي (هوست)</span>
                     </button>
                     <button class="toggle-btn" id="toggle-nohost" onclick="setHostMode(false)">
-                        <span class="toggle-icon">🤖</span>
-                        <span class="toggle-label">بدون راوي (تلقائي)</span>
-                        <span class="toggle-desc">اللعبة تلقائية — كل لاعب يرى دوره على جهازه</span>
+                        <span class="toggle-icon">🤖</span> <span class="toggle-label">بدون راوي (تلقائي)</span>
                     </button>
                 </div>
             </div>
@@ -57,59 +52,29 @@
                 <div class="role-settings">
                     <div class="role-setting">
                         <span class="role-label role-mafia-text">🩸 المافيا</span>
-                        <div class="counter">
-                            <button class="counter-btn" onclick="adjustCount('mafia', -1)">−</button>
-                            <span id="count-mafia">1</span>
-                            <button class="counter-btn" onclick="adjustCount('mafia', 1)">+</button>
-                        </div>
+                        <div class="counter"><button class="counter-btn" onclick="adjustCount('mafia', -1)">−</button><span id="count-mafia">1</span><button class="counter-btn" onclick="adjustCount('mafia', 1)">+</button></div>
                     </div>
                     <div class="role-setting">
                         <span class="role-label role-doctor-text">👨‍⚕️ الطبيب</span>
-                        <div class="counter">
-                            <button class="counter-btn" onclick="adjustCount('doctor', -1)">−</button>
-                            <span id="count-doctor">1</span>
-                            <button class="counter-btn" onclick="adjustCount('doctor', 1)">+</button>
-                        </div>
+                        <div class="counter"><button class="counter-btn" onclick="adjustCount('doctor', -1)">−</button><span id="count-doctor">1</span><button class="counter-btn" onclick="adjustCount('doctor', 1)">+</button></div>
                     </div>
                     <div class="role-setting">
                         <span class="role-label role-detective-text">🕵️‍♂️ المحقق</span>
-                        <div class="counter">
-                            <button class="counter-btn" onclick="adjustCount('detective', -1)">−</button>
-                            <span id="count-detective">1</span>
-                            <button class="counter-btn" onclick="adjustCount('detective', 1)">+</button>
-                        </div>
+                        <div class="counter"><button class="counter-btn" onclick="adjustCount('detective', -1)">−</button><span id="count-detective">1</span><button class="counter-btn" onclick="adjustCount('detective', 1)">+</button></div>
                     </div>
                 </div>
             </div>
 
             <div class="setting-card">
                 <h3>القدرات الخاصة</h3>
-                <div class="toggle-group">
-                    <button class="toggle-btn active" id="toggle-abilities-main" onclick="toggleMainAbilities()">
-                        <span class="toggle-icon">⚡</span>
-                        <span class="toggle-label">تفعيل القدرات الخاصة</span>
-                        <span class="toggle-desc">التمويه، التشريح، المراقبة... إلخ</span>
-                    </button>
-                </div>
-                
+                <div class="toggle-group"><button class="toggle-btn active" id="toggle-abilities-main" onclick="toggleMainAbilities()"><span class="toggle-icon">⚡</span> <span class="toggle-label">تفعيل القدرات الخاصة</span></button></div>
                 <div id="abilities-sub-list" class="role-settings" style="margin-top: 15px;">
-                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('mafia')" id="toggle-ab-mafia">
-                        <span class="role-label role-mafia-text">🩸 قدرات المافيا</span>
-                        <span class="ab-status">✅</span>
-                    </div>
-                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('doctor')" id="toggle-ab-doctor">
-                        <span class="role-label role-doctor-text">👨‍⚕️ قدرات الطبيب</span>
-                        <span class="ab-status">✅</span>
-                    </div>
-                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('detective')" id="toggle-ab-detective">
-                        <span class="role-label role-detective-text">🕵️‍♂️ قدرات المحقق</span>
-                        <span class="ab-status">✅</span>
-                    </div>
+                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('mafia')" id="toggle-ab-mafia"><span class="role-label role-mafia-text">🩸 قدرات المافيا</span><span class="ab-status">✅</span></div>
+                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('doctor')" id="toggle-ab-doctor"><span class="role-label role-doctor-text">👨‍⚕️ قدرات الطبيب</span><span class="ab-status">✅</span></div>
+                    <div class="role-setting" style="cursor: pointer;" onclick="toggleRoleAbility('detective')" id="toggle-ab-detective"><span class="role-label role-detective-text">🕵️‍♂️ قدرات المحقق</span><span class="ab-status">✅</span></div>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="createRoom()">
-                <span class="btn-icon">🎮</span> إنشاء الغرفة
-            </button>
+            <button class="btn btn-primary" onclick="createRoom()"><span class="btn-icon">🎮</span> إنشاء الغرفة</button>
         </div>
     </div>
 
@@ -118,7 +83,6 @@
             <button class="back-btn" onclick="goHome()">→ رجوع</button>
             <h2>🚪 انضمام لغرفة</h2>
             <div class="code-input-group">
-                <label>كود الغرفة</label>
                 <div class="code-inputs">
                     <input type="tel" class="code-digit" maxlength="1" data-idx="0" oninput="onCodeInput(this)" onkeydown="onCodeKeydown(event, this)">
                     <input type="tel" class="code-digit" maxlength="1" data-idx="1" oninput="onCodeInput(this)" onkeydown="onCodeKeydown(event, this)">
@@ -126,9 +90,7 @@
                     <input type="tel" class="code-digit" maxlength="1" data-idx="3" oninput="onCodeInput(this)" onkeydown="onCodeKeydown(event, this)">
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="joinRoom()">
-                <span class="btn-icon">🚀</span> دخول
-            </button>
+            <button class="btn btn-primary" onclick="joinRoom()"><span class="btn-icon">🚀</span> دخول</button>
         </div>
     </div>
 
@@ -136,21 +98,12 @@
         <div class="panel">
             <div class="lobby-header">
                 <h2>🎮 غرفة الانتظار</h2>
-                <div class="room-code-display">
-                    <span class="room-code-label">كود الغرفة</span>
-                    <span class="room-code-value" id="lobby-code">----</span>
-                    <button class="copy-btn" onclick="copyCode()" title="نسخ الكود">📋</button>
-                </div>
+                <div class="room-code-display"><span class="room-code-value" id="lobby-code">----</span><button class="copy-btn" onclick="copyCode()">📋</button></div>
             </div>
             <div class="lobby-settings" id="lobby-settings"></div>
             <div class="players-list" id="lobby-players"></div>
-            <button class="btn btn-primary" id="btn-start-game" style="display:none" onclick="startGame()">
-                <span class="btn-icon">🎭</span> بدء اللعبة
-            </button>
-            <div class="waiting-indicator" id="waiting-indicator">
-                <div class="pulse-dot"></div>
-                <span>في انتظار بدء اللعبة...</span>
-            </div>
+            <button class="btn btn-primary" id="btn-start-game" style="display:none" onclick="startGame()">بدء اللعبة</button>
+            <div class="waiting-indicator" id="waiting-indicator"><div class="pulse-dot"></div><span>في انتظار بدء اللعبة...</span></div>
         </div>
     </div>
 
@@ -162,9 +115,7 @@
                     <h2 id="role-name">الدور</h2>
                     <p id="role-desc" class="role-description">الوصف</p>
                     <div class="abilities-preview" id="abilities-preview"></div>
-                    <button class="btn btn-glass" onclick="playerReady()">
-                        <span class="btn-icon">✅</span> مستعد — فهمت دوري
-                    </button>
+                    <button class="btn btn-glass" onclick="playerReady()">✅ مستعد</button>
                 </div>
             </div>
         </div>
@@ -172,71 +123,72 @@
 
     <div id="screen-night" class="screen">
         <div class="panel night-panel">
-            <div class="night-header">
-                <div class="moon-icon">🌙</div>
-                <h2>الليلة <span id="night-round">1</span></h2>
-                <p class="night-subtitle">المدينة نامت...</p>
-            </div>
+            <div class="night-header"><div class="moon-icon">🌙</div><h2>الليلة <span id="night-round">1</span></h2></div>
 
             <div id="night-mafia" class="night-action-section hidden">
-                <h3 class="role-mafia-text">🩸 اختر ضحيتك</h3>
+                <h3 class="role-mafia-text">🩸 اختر ضحيتك الأساسية</h3>
                 <div id="mafia-targets" class="target-grid"></div>
                 <div id="mafia-abilities" class="abilities-section"></div>
-                <button class="btn btn-danger" id="btn-mafia-confirm" onclick="confirmNightAction()">تأكيد الاختيار</button>
+                <div id="mafia-ability-container" class="hidden" style="margin-bottom: 20px;">
+                    <h4 style="color:var(--warning-color);margin-bottom:10px;">🎯 اختر هدف القدرة:</h4>
+                    <div id="mafia-ability-targets" class="target-grid"></div>
+                </div>
+                <button class="btn btn-danger" onclick="confirmNightAction()">تأكيد الاختيار</button>
             </div>
 
             <div id="night-doctor" class="night-action-section hidden">
                 <h3 class="role-doctor-text">👨‍⚕️ اختر من تحميه</h3>
                 <div id="doctor-targets" class="target-grid"></div>
                 <div id="doctor-abilities" class="abilities-section"></div>
-                <button class="btn btn-success" id="btn-doctor-confirm" onclick="confirmNightAction()">تأكيد الحماية</button>
+                <div id="doctor-ability-container" class="hidden" style="margin-bottom: 20px;">
+                    <h4 style="color:var(--warning-color);margin-bottom:10px;">🎯 اختر هدف القدرة:</h4>
+                    <div id="doctor-ability-targets" class="target-grid"></div>
+                </div>
+                <button class="btn btn-success" onclick="confirmNightAction()">تأكيد الحماية</button>
             </div>
 
             <div id="night-detective" class="night-action-section hidden">
                 <h3 class="role-detective-text">🕵️ اختر من تحقق معه</h3>
                 <div id="detective-targets" class="target-grid"></div>
                 <div id="detective-abilities" class="abilities-section"></div>
-                <button class="btn btn-info" id="btn-detective-confirm" onclick="confirmNightAction()">تأكيد التحقيق</button>
+                <div id="detective-ability-container" class="hidden" style="margin-bottom: 20px;">
+                    <h4 style="color:var(--warning-color);margin-bottom:10px;">🎯 اختر هدف القدرة:</h4>
+                    <div id="detective-ability-targets" class="target-grid"></div>
+                </div>
+                <button class="btn btn-info" onclick="confirmNightAction()">تأكيد التحقيق</button>
             </div>
 
             <div id="night-citizen" class="night-action-section hidden">
-                <div class="sleeping-container">
-                    <div class="zzz">💤</div>
-                    <p>أنت نائم... انتظر حتى يطلع النهار</p>
-                </div>
+                <div class="sleeping-container"><div class="zzz">💤</div><p>أنت نائم... انتظر حتى يطلع النهار</p></div>
+            </div>
+
+            <div id="night-dead" class="night-action-section hidden">
+                <h3>👻 شاشة الموتى (بث مباشر)</h3>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:15px;">أنت تراقب ما يحدث في القرية...</p>
+                <div id="dead-night-log" class="host-log"></div>
             </div>
 
             <div id="night-host" class="night-action-section hidden">
                 <h3>📖 لوحة الراوي</h3>
                 <div id="host-night-log" class="host-log"></div>
-                <button class="btn btn-primary" id="btn-host-advance" onclick="hostAdvance()" style="display:none">
-                    ☀️ إنهاء الليل والانتقال للنهار
-                </button>
+                <button class="btn btn-primary" id="btn-host-advance" onclick="hostAdvance()" style="display:none">☀️ إنهاء الليل</button>
             </div>
 
             <div id="night-waiting" class="hidden">
-                <div class="sleeping-container">
-                    <div class="zzz">⏳</div>
-                    <p>تم إرسال اختيارك... في انتظار بقية اللاعبين</p>
-                </div>
+                <div class="sleeping-container"><div class="zzz">⏳</div><p>في انتظار بقية اللاعبين</p></div>
             </div>
         </div>
     </div>
 
     <div id="screen-day" class="screen">
         <div class="panel day-panel">
-            <div class="day-header">
-                <div class="sun-icon">☀️</div>
-                <h2>النهار — الجولة <span id="day-round">1</span></h2>
-            </div>
+            <div class="day-header"><div class="sun-icon">☀️</div><h2>النهار — الجولة <span id="day-round">1</span></h2></div>
             <div id="day-results" class="day-results"></div>
             <div id="day-special-info" class="special-info-section"></div>
             <div id="day-frame-announcement" class="frame-announcement hidden"></div>
             <div id="blackmail-notice" class="blackmail-notice hidden"></div>
             <div id="day-players" class="players-status-list"></div>
-            <button class="btn btn-primary" id="btn-go-vote" onclick="goToVoting()">
-                <span class="btn-icon">🗳️</span> الانتقال للتصويت
-            </button>
+            <button class="btn btn-primary" id="btn-go-vote" onclick="goToVoting()">الانتقال للتصويت</button>
         </div>
     </div>
 
@@ -245,31 +197,26 @@
             <h2>🗳️ التصويت</h2>
             <p class="vote-subtitle">اختر من تريد طرده من القرية</p>
             <div id="vote-targets" class="target-grid"></div>
-            <div class="vote-actions">
+            <div class="vote-actions" id="vote-actions-container">
                 <button class="btn btn-primary" id="btn-confirm-vote" onclick="confirmVote()">تأكيد التصويت</button>
-                <button class="btn btn-glass" onclick="skipVote()">تخطي التصويت</button>
+                <button class="btn btn-glass" id="btn-skip-vote" onclick="skipVote()">تخطي التصويت</button>
             </div>
             <div class="vote-progress" id="vote-progress"></div>
         </div>
     </div>
 
     <div id="screen-vote-result" class="screen">
-        <div class="panel">
-            <div id="vote-result-content"></div>
-        </div>
+        <div class="panel"><div id="vote-result-content"></div></div>
     </div>
 
     <div id="screen-gameover" class="screen">
         <div class="gameover-container">
             <div id="gameover-content"></div>
-            <button class="btn btn-primary" onclick="location.reload()">
-                <span class="btn-icon">🔄</span> جلسة جديدة
-            </button>
+            <button class="btn btn-primary" onclick="location.reload()">🔄 جلسة جديدة</button>
         </div>
     </div>
 
     <div class="toast-container" id="toast-container"></div>
-
     <script src="/socket.io/socket.io.js"></script>
     <script src="test.js"></script>
 </body>
